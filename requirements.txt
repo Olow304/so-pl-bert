@@ -1,6 +1,7 @@
 # Minimal pip requirements for users who cannot use conda.  These
 # correspond to the packages specified in environment.yml.  Use the
 # versions below to ensure reproducibility.
+numpy<2.0
 transformers==4.35.2
 datasets
 sentencepiece

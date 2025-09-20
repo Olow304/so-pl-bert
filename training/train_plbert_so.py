@@ -94,12 +94,18 @@ def main():
     )
     model = AlbertForMaskedLM(config)
 
+    # Create a dummy tokenizer-like object for the data collator
+    class DummyTokenizer:
+        def __init__(self, pad_token_id):
+            self.pad_token_id = pad_token_id
+
+    dummy_tokenizer = DummyTokenizer(pad_token_id=token_to_id["<pad>"])
+
     # Data collator for masked LM
     data_collator = DataCollatorForLanguageModeling(
-        tokenizer=None,  # we provide input_ids directly
+        tokenizer=dummy_tokenizer,
         mlm=True,
         mlm_probability=0.15,
-        pad_token_id=token_to_id["<pad>"],
     )
 
     # Prepare training arguments
