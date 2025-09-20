@@ -3,6 +3,7 @@
 # versions below to ensure reproducibility.
 numpy<2.0
 transformers==4.35.2
+accelerate==0.24.1
 datasets
 sentencepiece
 tokenizers==0.14.1

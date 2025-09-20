@@ -133,7 +133,9 @@ def main():
         learning_rate=args.lr,
         logging_steps=100,
         save_total_limit=2,
-        fp16=torch.cuda.is_available(),
+        fp16=False,  # Disable FP16 due to GPU compatibility issues
+        no_cuda=not torch.cuda.is_available(),  # Use CPU if CUDA not available
+        remove_unused_columns=False,  # Keep all columns in dataset
     )
 
     # Trainer
