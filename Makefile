@@ -27,11 +27,12 @@ env:
 	@if [ -n "$(CONDA)" ]; then \
 		echo "[INFO] Creating conda environment $(ENV_NAME)"; \
 		$(CONDA) env create -f environment.yml -n $(ENV_NAME); \
-		conda activate $(ENV_NAME) && pip install -r requirements.txt; \
+		echo "[INFO] To activate: conda activate $(ENV_NAME)"; \
 	else \
 		echo "[INFO] Creating virtualenv"; \
 		$(PYTHON) -m venv $(ENV_NAME); \
-		source $(ENV_NAME)/bin/activate && pip install -r requirements.txt; \
+		. $(ENV_NAME)/bin/activate && pip install -r requirements.txt; \
+		echo "[INFO] Environment created. To activate: source $(ENV_NAME)/bin/activate"; \
 	fi
 
 # Run the complete data pipeline: crawl raw text, clean and dedup, phonemize
