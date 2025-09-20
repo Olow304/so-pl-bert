@@ -152,7 +152,7 @@ def create_styletts2_config(data_dir):
         "epochs": 50,  # Adjust based on data amount
         "batch_size": 4,  # Adjust based on GPU memory
         "max_len": 400,  # ~5 seconds at 24kHz
-        "pretrained_model": "Models/LibriTTS/epoch_2nd_00100.pth",  # Pre-trained checkpoint
+        "pretrained_model": "Models/LibriTTS/epochs_2nd_00020.pth",  # Pre-trained checkpoint from HuggingFace
         "second_stage_load_pretrained": True,
         "load_only_params": False,
 

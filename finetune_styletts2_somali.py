@@ -34,22 +34,42 @@ def setup_styletts2():
     return os.path.abspath("StyleTTS2")
 
 def download_pretrained_model():
-    """Download pre-trained LibriTTS model for fine-tuning."""
+    """Download pre-trained LibriTTS model for fine-tuning from HuggingFace."""
 
     models_dir = "Models/LibriTTS"
     os.makedirs(models_dir, exist_ok=True)
 
-    checkpoint_path = os.path.join(models_dir, "epoch_2nd_00100.pth")
+    checkpoint_path = os.path.join(models_dir, "epochs_2nd_00020.pth")
+    config_path = os.path.join(models_dir, "config.yml")
 
     if not os.path.exists(checkpoint_path):
-        logging.info("Downloading pre-trained LibriTTS model...")
-        # Note: You'll need to get this from the StyleTTS2 releases
-        logging.warning(
-            "Please download the pre-trained model manually from:\n"
-            "https://github.com/yl4579/StyleTTS2/releases\n"
-            f"And place it at: {checkpoint_path}"
-        )
-        return False
+        logging.info("Downloading pre-trained LibriTTS model from HuggingFace...")
+
+        try:
+            # Download using wget or curl
+            import urllib.request
+
+            # Download checkpoint (note: filename is epochs_2nd_00020.pth on HuggingFace)
+            checkpoint_url = "https://huggingface.co/yl4579/StyleTTS2-LibriTTS/resolve/main/Models/LibriTTS/epochs_2nd_00020.pth"
+            logging.info(f"Downloading checkpoint from {checkpoint_url}")
+
+            # Save as epochs_2nd_00020.pth to match HuggingFace naming
+            actual_checkpoint_path = os.path.join(models_dir, "epochs_2nd_00020.pth")
+            urllib.request.urlretrieve(checkpoint_url, actual_checkpoint_path)
+
+            # Download config
+            config_url = "https://huggingface.co/yl4579/StyleTTS2-LibriTTS/resolve/main/Models/LibriTTS/config.yml"
+            logging.info(f"Downloading config from {config_url}")
+            urllib.request.urlretrieve(config_url, config_path)
+
+        except Exception as e:
+            logging.error(f"Failed to download: {e}")
+            logging.info(
+                "Alternative: You can manually download from:\n"
+                "https://huggingface.co/yl4579/StyleTTS2-LibriTTS/tree/main\n"
+                f"And place files in: {models_dir}"
+            )
+            return False
 
     return True
 
