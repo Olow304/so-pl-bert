@@ -17,3 +17,9 @@ tqdm
 datasketch==1.5.8
 unidecode==1.3.7
 soundfile
+librosa
+pyyaml
+phonemizer
+einops
+einops-exts
+torchaudio

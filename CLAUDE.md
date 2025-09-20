@@ -8,6 +8,28 @@ This is a Somali PL-BERT + StyleTTS2 pipeline for training phoneme-level BERT mo
 
 ## Key Commands
 
+### Complete Pipeline (PL-BERT + StyleTTS2)
+
+```bash
+# 1. Train PL-BERT (already done)
+make data          # Prepare text data
+make train         # Train PL-BERT
+make pack          # Package for StyleTTS2
+
+# 2. Prepare audio data for StyleTTS2
+python prepare_styletts2_data.py  # Download & format Somali TTS dataset
+
+# 3. Fine-tune StyleTTS2
+python finetune_styletts2_somali.py  # Setup and train StyleTTS2
+
+# 4. Generate speech
+python styletts2_integration/tts_infer_so.py \
+  --text "Your Somali text" \
+  --plbert_dir runs/plbert_so/packaged \
+  --styletts2_checkpoint Models/Somali/best_model.pth \
+  --out output/
+```
+
 ### Environment Setup
 ```bash
 make env           # Create conda/virtualenv with pinned dependencies
