@@ -6,7 +6,7 @@ datasets
 sentencepiece
 tokenizers==0.14.1
 pytorch-lightning==2.1.4
-pytorch==2.1.2
+torch==2.1.2
 pyyaml
 pandas
 fasttext
