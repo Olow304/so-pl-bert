@@ -24,31 +24,46 @@ if os.path.exists(checkpoint_path):
     if hasattr(data, '__dict__'):
         print(f"Attributes: {list(data.__dict__.keys())[:10]}")  # First 10 attributes
 
-# Look for the actual model file
-model_path = os.path.join(plbert_dir, 'pytorch_model.bin')
-if not os.path.exists(model_path):
-    # Try to find it in the parent directory
-    parent_model_path = 'runs/plbert_so/pytorch_model.bin'
-    if os.path.exists(parent_model_path):
-        model_path = parent_model_path
-        print(f"\nFound model at {model_path}")
-    else:
-        # Check if there's a checkpoint in the training directory
-        training_checkpoints = [
-            'runs/plbert_so/checkpoint-1000/pytorch_model.bin',
-            'runs/plbert_so/checkpoint-2000/pytorch_model.bin',
-            'runs/plbert_so/checkpoint-3000/pytorch_model.bin',
-            'runs/plbert_so/checkpoint-4000/pytorch_model.bin',
-            'runs/plbert_so/checkpoint-5000/pytorch_model.bin',
-        ]
+# Look for the actual model file in various locations
+print("\nSearching for model weights...")
 
-        for ckpt_path in training_checkpoints:
-            if os.path.exists(ckpt_path):
-                model_path = ckpt_path
-                print(f"\nFound model checkpoint at {model_path}")
-                break
+possible_paths = [
+    os.path.join(plbert_dir, 'pytorch_model.bin'),
+    'runs/plbert_so/pytorch_model.bin',
+    'runs/plbert_so/model.pt',
+    'runs/plbert_so/best_model.pt',
+    'runs/plbert_so/final_model.pt',
+    # Check checkpoint directories
+    'runs/plbert_so/checkpoint-1000/pytorch_model.bin',
+    'runs/plbert_so/checkpoint-2000/pytorch_model.bin',
+    'runs/plbert_so/checkpoint-3000/pytorch_model.bin',
+    'runs/plbert_so/checkpoint-4000/pytorch_model.bin',
+    'runs/plbert_so/checkpoint-5000/pytorch_model.bin',
+]
 
-if os.path.exists(model_path):
+model_path = None
+for path in possible_paths:
+    if os.path.exists(path):
+        model_path = path
+        print(f"Found model at: {model_path}")
+        break
+
+# If not found, list what's in the runs directory to help debug
+if not model_path:
+    print("\nListing contents of runs/plbert_so/:")
+    if os.path.exists('runs/plbert_so'):
+        for item in os.listdir('runs/plbert_so'):
+            item_path = os.path.join('runs/plbert_so', item)
+            if os.path.isdir(item_path):
+                print(f"  Directory: {item}/")
+                # Check inside checkpoint directories
+                if 'checkpoint' in item:
+                    for subitem in os.listdir(item_path)[:5]:  # First 5 files
+                        print(f"    - {subitem}")
+            else:
+                print(f"  File: {item}")
+
+if model_path and os.path.exists(model_path):
     print(f"\nLoading model from {model_path}...")
     model_state = torch.load(model_path, map_location='cpu', weights_only=False)
 
@@ -94,7 +109,44 @@ if os.path.exists(model_path):
         print("Trying to save as-is...")
         torch.save(model_state, os.path.join(plbert_dir, 'step_000001.pt'))
 else:
-    print("\n✗ Could not find pytorch_model.bin")
-    print("Please ensure the PL-BERT model was properly trained and packaged")
+    print("\n✗ Could not find model weights")
+    print("\nLet's check if there's a model.safetensors file:")
+
+    # Check for safetensors format
+    safetensor_paths = [
+        os.path.join(plbert_dir, 'model.safetensors'),
+        'runs/plbert_so/model.safetensors',
+        'runs/plbert_so/checkpoint-5000/model.safetensors',
+    ]
+
+    for path in safetensor_paths:
+        if os.path.exists(path):
+            print(f"Found safetensors model at: {path}")
+            print("Note: This needs to be converted to .pt format")
+            # Try to load with safetensors
+            try:
+                from safetensors import safe_open
+                from safetensors.torch import load_file
+
+                state_dict = load_file(path)
+                print(f"Loaded safetensors model with {len(state_dict)} parameters")
+
+                # Save as .pt file
+                new_checkpoint_path = os.path.join(plbert_dir, 'step_000001.pt')
+                if os.path.exists(new_checkpoint_path):
+                    backup_path = new_checkpoint_path + '.bak'
+                    os.rename(new_checkpoint_path, backup_path)
+                    print(f"Backed up old checkpoint to {backup_path}")
+
+                torch.save(state_dict, new_checkpoint_path)
+                print(f"\n✓ Converted and saved model to {new_checkpoint_path}")
+                model_path = new_checkpoint_path  # Set this so we don't show error
+            except ImportError:
+                print("safetensors library not installed. Install with: pip install safetensors")
+            break
+
+    if not model_path:
+        print("\nCould not find any model weights.")
+        print("Please check if the model was properly trained and saved.")
 
 print("\nDone!")
