@@ -22,8 +22,7 @@ from typing import Dict, List
 
 import torch
 from datasets import Dataset
-from transformers import (AlbertForMaskedLM, Trainer,
-                          DataCollatorForLanguageModeling)
+from transformers import AlbertForMaskedLM, Trainer, TrainingArguments
 
 
 def load_jsonl(path: str) -> List[Dict]:
@@ -57,19 +56,73 @@ def main():
     dev_data = load_jsonl(args.dev)
     dev_enc = encode_data(dev_data, token_to_id)
     dev_ds = Dataset.from_dict({"input_ids": dev_enc})
-    data_collator = DataCollatorForLanguageModeling(
-        tokenizer=None,
-        mlm=True,
+
+    # Custom data collator for masked LM (same as in training script)
+    class CustomMLMDataCollator:
+        def __init__(self, token_to_id, mlm_probability=0.15, max_length=256):
+            self.token_to_id = token_to_id
+            self.mlm_probability = mlm_probability
+            self.max_length = max_length
+            self.pad_token_id = token_to_id["<pad>"]
+            self.mask_token_id = token_to_id["<mask>"]
+
+        def __call__(self, examples):
+            # Pad sequences
+            padded_inputs = []
+            attention_masks = []
+
+            for example in examples:
+                input_ids = example["input_ids"][:self.max_length]
+                padding_length = self.max_length - len(input_ids)
+
+                padded_input = input_ids + [self.pad_token_id] * padding_length
+                attention_mask = [1] * len(input_ids) + [0] * padding_length
+
+                padded_inputs.append(padded_input)
+                attention_masks.append(attention_mask)
+
+            # Convert to tensors
+            input_ids = torch.tensor(padded_inputs, dtype=torch.long)
+            attention_mask = torch.tensor(attention_masks, dtype=torch.long)
+
+            # Create labels (copy of input_ids)
+            labels = input_ids.clone()
+
+            # Apply masking
+            probability_matrix = torch.full(input_ids.shape, self.mlm_probability)
+            # Don't mask padding tokens
+            probability_matrix.masked_fill_(input_ids == self.pad_token_id, value=0.0)
+
+            masked_indices = torch.bernoulli(probability_matrix).bool()
+            labels[~masked_indices] = -100  # Only compute loss on masked tokens
+
+            # Replace masked positions with mask token
+            input_ids[masked_indices] = self.mask_token_id
+
+            return {
+                "input_ids": input_ids,
+                "attention_mask": attention_mask,
+                "labels": labels,
+            }
+
+    data_collator = CustomMLMDataCollator(
+        token_to_id=token_to_id,
         mlm_probability=0.15,
-        pad_token_id=token_to_id["<pad>"],
+        max_length=256
     )
+
     # Trainer in eval mode
-    training_args = dict(
-        output_dir="/tmp/eval", per_device_eval_batch_size=args.batch_size, fp16=torch.cuda.is_available()
+    training_args = TrainingArguments(
+        output_dir="/tmp/eval",
+        per_device_eval_batch_size=args.batch_size,
+        fp16=False,
+        no_cuda=True,  # Use CPU for eval
+        remove_unused_columns=False,
     )
+
     trainer = Trainer(
         model=model,
-        args=type("Args", (), training_args)(),
+        args=training_args,
         eval_dataset=dev_ds,
         data_collator=data_collator,
     )
