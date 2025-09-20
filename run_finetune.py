@@ -9,51 +9,133 @@ import subprocess
 import yaml
 
 def update_config():
-    """Update the config file with correct paths."""
+    """Update the config file with correct paths and format matching StyleTTS2."""
 
     config_path = "data_styletts2/config_somali_ft.yml"
 
-    # Read existing config
-    with open(config_path, 'r') as f:
-        config = yaml.safe_load(f)
+    # Create proper StyleTTS2 config structure
+    config = {
+        'log_dir': 'Models/Somali',
+        'save_freq': 5,
+        'log_interval': 10,
+        'device': 'cuda' if os.system("nvidia-smi > /dev/null 2>&1") == 0 else 'cpu',
+        'epochs': 50,
+        'batch_size': 4,  # Adjust based on GPU memory
+        'max_len': 400,
+        'pretrained_model': os.path.abspath('Models/LibriTTS/epochs_2nd_00020.pth'),
+        'second_stage_load_pretrained': True,
+        'load_only_params': True,
 
-    # Update paths to be absolute
-    config['train_data'] = os.path.abspath("data_styletts2/train_list.txt")
-    config['val_data'] = os.path.abspath("data_styletts2/val_list.txt")
-    config['OOD_data'] = os.path.abspath("data_styletts2/OOD_list.txt")
-    config['data_path'] = os.path.abspath("data_styletts2/wavs")
+        # Paths to pre-trained components
+        'F0_path': 'Utils/JDC/bst.t7',
+        'ASR_config': 'Utils/ASR/config.yml',
+        'ASR_path': 'Utils/ASR/epoch_00080.pth',
+        'PLBERT_dir': os.path.abspath('runs/plbert_so/packaged'),  # Use our Somali PL-BERT!
 
-    # Update model paths
-    config['PLBERT_dir'] = os.path.abspath("runs/plbert_so/packaged")
-    config['pretrained_model'] = os.path.abspath("Models/LibriTTS/epochs_2nd_00020.pth")
-    config['log_dir'] = os.path.abspath("Models/Somali")
+        # Data parameters
+        'data_params': {
+            'train_data': os.path.abspath('data_styletts2/train_list.txt'),
+            'val_data': os.path.abspath('data_styletts2/val_list.txt'),
+            'root_path': os.path.abspath('data_styletts2/wavs'),
+            'OOD_data': os.path.abspath('data_styletts2/OOD_list.txt'),
+            'min_length': 50
+        },
 
-    # Ensure proper training parameters
-    config['batch_size'] = 4  # Adjust based on GPU memory
-    config['epochs'] = 50
-    config['save_freq'] = 1
-    config['log_interval'] = 10
-    config['joint_epoch'] = 30  # Start adversarial training
+        # Preprocessing parameters
+        'preprocess_params': {
+            'sr': 24000,
+            'spect_params': {
+                'n_fft': 2048,
+                'win_length': 1200,
+                'hop_length': 300
+            }
+        },
 
-    # Add missing keys that StyleTTS2 expects
-    config['first_stage_path'] = None
-    config['second_stage_path'] = config['pretrained_model']
-    config['load_only_params'] = False
-    config['F0_path'] = "Utils/JDC"
-    config['ASR_path'] = "Utils/ASR"
-    config['ASR_config'] = "Utils/ASR/config.yml"
+        # Model parameters
+        'model_params': {
+            'multispeaker': False,  # Single speaker Somali
+            'dim_in': 64,
+            'hidden_dim': 512,
+            'max_conv_dim': 512,
+            'n_layer': 3,
+            'n_mels': 80,
+            'n_token': 178,  # Adjust if needed based on phoneme set
+            'max_dur': 50,
+            'style_dim': 128,
+            'dropout': 0.2,
 
-    # Data configuration
-    config['max_len'] = 400  # ~5 seconds at 24kHz
-    config['min_length'] = 50
-    config['batch_percentage'] = 0.5
-    config['device'] = 'cuda' if os.system("nvidia-smi > /dev/null 2>&1") == 0 else 'cpu'
+            # Decoder config
+            'decoder': {
+                'type': 'hifigan',
+                'resblock_kernel_sizes': [3, 7, 11],
+                'upsample_rates': [10, 5, 3, 2],
+                'upsample_initial_channel': 512,
+                'resblock_dilation_sizes': [[1, 3, 5], [1, 3, 5], [1, 3, 5]],
+                'upsample_kernel_sizes': [20, 10, 6, 4]
+            },
 
-    # Training strategy
-    config['TMA_epoch'] = 5
-    config['TMA_CEloss'] = False
-    config['diff_epoch'] = 10
-    config['joint_epoch'] = 30
+            # SLM config
+            'slm': {
+                'model': 'microsoft/wavlm-base-plus',
+                'sr': 16000,
+                'hidden': 768,
+                'nlayers': 13,
+                'initial_channel': 64
+            },
+
+            # Diffusion config
+            'diffusion': {
+                'embedding_mask_proba': 0.1,
+                'transformer': {
+                    'num_layers': 3,
+                    'num_heads': 8,
+                    'head_features': 64,
+                    'multiplier': 2
+                },
+                'dist': {
+                    'sigma_data': 0.2,
+                    'estimate_sigma_data': True,
+                    'mean': -3.0,
+                    'std': 1.0
+                }
+            }
+        },
+
+        # Loss parameters
+        'loss_params': {
+            'lambda_mel': 5.0,
+            'lambda_gen': 1.0,
+            'lambda_slm': 1.0,
+            'lambda_mono': 1.0,
+            'lambda_s2s': 1.0,
+            'lambda_F0': 1.0,
+            'lambda_norm': 1.0,
+            'lambda_dur': 1.0,
+            'lambda_ce': 20.0,
+            'lambda_sty': 1.0,
+            'lambda_diff': 1.0,
+            'diff_epoch': 10,
+            'joint_epoch': 30
+        },
+
+        # Optimizer parameters
+        'optimizer_params': {
+            'lr': 0.0001,
+            'bert_lr': 0.00001,
+            'ft_lr': 0.0001
+        },
+
+        # SLM adversarial parameters
+        'slmadv_params': {
+            'min_len': 400,
+            'max_len': 500,
+            'batch_percentage': 0.5,
+            'iter': 10,
+            'thresh': 5,
+            'scale': 0.01,
+            'sig': 1.5
+        }
+    }
 
     # Save updated config
     with open(config_path, 'w') as f:
