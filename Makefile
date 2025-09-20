@@ -75,7 +75,7 @@ cpt:
 .PHONY: eval
 eval:
 	$(PYTHON) training/eval_plbert_so.py \
-		--model runs/plbert_so/continue/best_model.pt \
+		--model runs/plbert_so/from_scratch \
 		--dev data_plbert/dev.jsonl \
 		--token_maps phonemize/token_maps.pkl
 
