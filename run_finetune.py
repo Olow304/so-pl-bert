@@ -16,8 +16,8 @@ def update_config():
     # Create proper StyleTTS2 config structure
     config = {
         'log_dir': 'Models/Somali',
-        'save_freq': 5,
-        'log_interval': 10,
+        'save_freq': 1,
+        'log_interval': 1,
         'device': 'cuda' if os.system("nvidia-smi > /dev/null 2>&1") == 0 else 'cpu',
         'epochs': 50,
         'batch_size': 4,  # Adjust based on GPU memory
