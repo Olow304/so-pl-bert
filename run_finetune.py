@@ -22,9 +22,9 @@ def update_config():
         'epochs': 50,
         'batch_size': 4,  # Adjust based on GPU memory
         'max_len': 400,
-        'pretrained_model': os.path.abspath('Models/LibriTTS/epochs_2nd_00020.pth'),
+        'pretrained_model': os.path.abspath('Models/LibriTTS/epochs_2nd_00020_no_bert.pth'),
         'second_stage_load_pretrained': True,
-        'load_only_params': True,
+        'load_only_params': False,
 
         # Paths to pre-trained components
         'F0_path': 'Utils/JDC/bst.t7',
