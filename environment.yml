@@ -1,0 +1,24 @@
+name: plbert_so_env
+channels:
+  - defaults
+  - conda-forge
+  - pytorch
+dependencies:
+  - python=3.11
+  - pytorch=2.1.2
+  - cudatoolkit=11.8
+  - sentencepiece
+  - tokenizers=0.14.1
+  - datasets
+  - transformers=4.35.2
+  - pyyaml
+  - pandas
+  - fasttext
+  - numba
+  - tqdm
+  - soundfile
+  - pip
+  - pip:
+      - datasketch==1.5.8
+      - unidecode==1.3.7
+      # styletts2 must be installed manually or via pip if published; see docs.

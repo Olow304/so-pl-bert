@@ -1,0 +1,35 @@
+#############################################
+# StyleTTS2 Stage‑2 training configuration
+#
+# Second stage continues training the acoustic model with PL‑BERT frozen or
+# fine‑tuned at a low learning rate.  Adjust `plbert_lr` as needed.  The
+# number of steps and batch sizes should match your GPU memory budget.
+
+# Dataset
+dataset:
+  name: somali_dataset
+  train_path: path/to/train_stage2/manifests
+  valid_path: path/to/valid_stage2/manifests
+  sample_rate: 22050
+
+# Model
+model:
+  plbert_dir: runs/plbert_so/packaged
+  hidden_size: 512
+  vocab_size: 0
+  n_mel_channels: 80
+
+# Training
+trainer:
+  batch_size: 8
+  grad_accum_steps: 4
+  epochs: 200
+  learning_rate: 1e-4
+  plbert_lr: 1e-5
+  warmup_steps: 1000
+  fp16: true
+
+optimizer:
+  type: adamw
+  betas: [0.9, 0.99]
+  weight_decay: 1e-5

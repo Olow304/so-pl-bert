@@ -1,0 +1,41 @@
+#############################################
+# StyleTTS2 Stage‑1 training configuration
+#
+# This YAML config provides an example configuration for training the first
+# stage of StyleTTS2 on Somali data.  It uses an A100 GPU with mixed
+# precision and gradient accumulation to enable large batch sizes.  Adjust
+# the data paths, batch sizes and learning rates according to your
+# resources.  See the original StyleTTS2 repo for additional options.
+
+# Dataset settings
+dataset:
+  name: somali_dataset
+  train_path: path/to/train/manifests # to be generated
+  valid_path: path/to/valid/manifests
+  sample_rate: 22050
+
+# Model settings
+model:
+  # text encoder
+  plbert_dir: runs/plbert_so/packaged
+  hidden_size: 512
+  vocab_size: 0  # will be read from PL‑BERT config
+  # audio settings
+  n_mel_channels: 80
+  # other hyperparameters...
+
+# Training
+trainer:
+  batch_size: 16
+  grad_accum_steps: 2
+  epochs: 500
+  learning_rate: 5e-4
+  plbert_lr: 1e-5
+  warmup_steps: 4000
+  fp16: true
+
+# Optimiser settings
+optimizer:
+  type: adam
+  betas: [0.9, 0.98]
+  weight_decay: 1e-6

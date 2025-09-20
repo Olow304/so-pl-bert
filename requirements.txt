@@ -1,0 +1,17 @@
+# Minimal pip requirements for users who cannot use conda.  These
+# correspond to the packages specified in environment.yml.  Use the
+# versions below to ensure reproducibility.
+transformers==4.35.2
+datasets
+sentencepiece
+tokenizers==0.14.1
+pytorch-lightning==2.1.4
+pytorch==2.1.2
+pyyaml
+pandas
+fasttext
+numba
+tqdm
+datasketch==1.5.8
+unidecode==1.3.7
+soundfile
