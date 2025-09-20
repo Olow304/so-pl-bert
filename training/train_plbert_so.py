@@ -96,10 +96,22 @@ def main():
 
     # Create a dummy tokenizer-like object for the data collator
     class DummyTokenizer:
-        def __init__(self, pad_token_id):
-            self.pad_token_id = pad_token_id
+        def __init__(self, token_to_id):
+            self.pad_token_id = token_to_id["<pad>"]
+            self.mask_token = "<mask>"
+            self.mask_token_id = token_to_id["<mask>"]
+            self.special_tokens_mask = None
+            self._pad_token = "<pad>"
 
-    dummy_tokenizer = DummyTokenizer(pad_token_id=token_to_id["<pad>"])
+        def __call__(self, *args, **kwargs):
+            # This shouldn't be called since we provide input_ids directly
+            raise NotImplementedError
+
+        @property
+        def model_max_length(self):
+            return args.max_len
+
+    dummy_tokenizer = DummyTokenizer(token_to_id=token_to_id)
 
     # Data collator for masked LM
     data_collator = DataCollatorForLanguageModeling(
