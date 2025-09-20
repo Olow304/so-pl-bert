@@ -39,8 +39,8 @@ env:
 # into JSONL and create token maps.  The outputs are written to `data_plbert`.
 .PHONY: data
 data:
-	$(PYTHON) crawl/crawl_wikipedia.py --out data_raw/wikipedia.txt
-	$(PYTHON) crawl/fetch_oscar.py --out data_raw/oscar.txt
+	-$(PYTHON) crawl/crawl_wikipedia.py --out data_raw/wikipedia.txt --skip-on-error
+	-$(PYTHON) crawl/fetch_oscar.py --out data_raw/oscar.txt
 	$(PYTHON) data_prep/clean_normalize.py --input data_raw --output data_clean
 	$(PYTHON) data_prep/langid_filter.py --input data_clean --output data_clean_filtered
 	$(PYTHON) data_prep/dedupe.py --input data_clean_filtered --output data_unique
