@@ -31,8 +31,13 @@ def patch_models_load_checkpoint():
     new_function = '''def load_checkpoint(model, optimizer, path, load_only_params=False, ignore_layers=[], is_distributed=False):
     checkpoint = torch.load(path, map_location='cpu', weights_only=False)
 
+    # Handle different checkpoint formats
     if 'model' in checkpoint:
-        raw_state_dict = checkpoint['model'] if 'model' in checkpoint else checkpoint['state_dict']
+        raw_state_dict = checkpoint['model']
+    elif 'net' in checkpoint:
+        raw_state_dict = checkpoint['net']
+    elif 'state_dict' in checkpoint:
+        raw_state_dict = checkpoint['state_dict']
     else:
         raw_state_dict = checkpoint
 
@@ -43,7 +48,17 @@ def patch_models_load_checkpoint():
         else:
             state_dict[k] = v
 
-    model_dict = model.state_dict()
+    # Handle model being a Munch/dict-like object
+    if hasattr(model, 'state_dict'):
+        model_dict = model.state_dict()
+    else:
+        # model is a dictionary of models
+        model_dict = {}
+        for key in model:
+            if hasattr(model[key], 'state_dict'):
+                for k, v in model[key].state_dict().items():
+                    model_dict[f"{key}.{k}"] = v
+
     model_dict = {k: v for k, v in model_dict.items() if k not in ignore_layers}
 
     # Handle BERT separately to avoid size mismatch
