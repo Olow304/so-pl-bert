@@ -83,6 +83,6 @@ eval:
 .PHONY: pack
 pack:
 	$(PYTHON) training/pack.py \
-		--input_dir runs/plbert_so/continue \
+		--input_dir runs/plbert_so/from_scratch \
 		--token_maps phonemize/token_maps.pkl \
 		--output_dir runs/plbert_so/packaged

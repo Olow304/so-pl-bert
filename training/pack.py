@@ -54,19 +54,18 @@ def main():
         f_out.write(f"num_attention_heads: {cfg['num_attention_heads']}\n")
     # Copy token maps
     shutil.copy(args.token_maps, os.path.join(args.output_dir, "token_maps.pkl"))
-    # Generate util.py with helper to load token map and wrapper for PL‑BERT
+    # Generate util.py with helper to load token map and wrapper for PL-BERT
     util_path = os.path.join(args.output_dir, "util.py")
     with open(util_path, "w", encoding="utf-8") as f:
-        f.write(""""""
-Utility functions for Somali PL‑BERT integration with StyleTTS2.
+        f.write('''"""
+Utility functions for Somali PL-BERT integration with StyleTTS2.
 
 This module exposes `load_token_map` to load the token dictionary and
 `map_tokens` to convert phoneme strings into integer sequences.  It also
 provides a `get_config` helper to return the model hyperparameters as a
 dictionary.  Adjust these functions as needed to align with the StyleTTS2
 frontend.
-""""""
-        )
+"""''')
         f.write("\n\nimport pickle\n\n")
         f.write("def load_token_map(path: str):\n")
         f.write("    with open(path, 'rb') as f:\n        return pickle.load(f)\n\n")
